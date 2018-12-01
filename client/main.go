@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/function61/gokit/bidipipe"
 	"golang.org/x/crypto/ssh"
-	"io"
 	"log"
 	"net"
 	"strings"
@@ -112,7 +111,7 @@ func tunnel() {
 	//	}
 	//}
 
-	session.Close()
+	defer session.Close()
 
 	go func() {
 		defer listener.Close()
@@ -139,14 +138,6 @@ func tunnel() {
 	}
 
 	serverConn.Close()
-}
-
-func SendCommand(in io.WriteCloser, cmd string) error {
-	if _, err := in.Write([]byte(cmd + "\n")); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func handleClient2(client net.Conn, localEndpoint string) {
