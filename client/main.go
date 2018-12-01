@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"github.com/function61/gokit/bidipipe"
 	"golang.org/x/crypto/ssh"
+	"io"
 	"log"
 	"net"
 	"strings"
 )
 
 func main() {
-	generate("key")
+	//generate("key")
 	tunnel()
 }
 
@@ -39,14 +40,14 @@ func tunnel() {
 	}
 
 	serverEndpoint := &Endpoint{
-		Host: "10.80.2.3",
-		Port: 22,
+		Host: "localhost",
+		Port: 8022,
 	}
 
 	sshConfig := &ssh.ClientConfig{
-		User: "ladmin",
+		User: "codex",
 		Auth: []ssh.AuthMethod{
-			privateKeyFile("./11"),
+			privateKeyFile("../tun_key.pem"),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
@@ -58,23 +59,60 @@ func tunnel() {
 		log.Fatalln(fmt.Printf("Dial INTO remote server error: %s", err))
 	}
 
-	session, _ := serverConn.NewSession()
-	//defer session.Close()
-	var stdoutBuf bytes.Buffer
-	session.Stdout = &stdoutBuf
-	session.Run("nostr")
-
-	if strings.Contains(stdoutBuf.String(), "[error]") {
-		log.Fatalln(fmt.Sprintf("%s", stdoutBuf.String()))
-	}
-
-	session.Close()
-
 	listener, err := serverConn.Listen("tcp", fmt.Sprintf("%s:0", serverEndpoint.Host))
 	if err != nil {
 		log.Fatalln(fmt.Printf("Listen open port ON remote server error: %s", err))
 	}
 	remoteAddr := listener.Addr()
+	PORT := strings.Split(remoteAddr.String(), ":")[1]
+
+	session, err := serverConn.NewSession()
+	if err != nil {
+		panic("Failed to create session: " + err.Error())
+	}
+
+	in, err := session.StdinPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var stdoutBuf bytes.Buffer
+	session.Stdout = &stdoutBuf
+
+	if strings.Contains(stdoutBuf.String(), "[error]") {
+		log.Fatalln(fmt.Sprintf("%s", stdoutBuf.String()))
+	}
+
+	session.Start("nostr")
+	in.Write([]byte("myhost\n"))
+	in.Write([]byte(PORT + "\n"))
+
+	//var (
+	//	line string
+	//	r    = bufio.NewReader(out)
+	//	output []byte
+	//)
+	//for {
+	//	b, err := r.ReadByte()
+	//	if err != nil {
+	//		break
+	//	}
+	//	output = append(output, b)
+	//	if b == byte('\n') {
+	//		line = ""
+	//		continue
+	//	}
+	//	line += string(b)
+	//	log.Printf(line)
+	//	if line == "lol" {
+	//		log.Printf("send")
+	//		in.Write([]byte("myhost\n"))
+	//		in.Write([]byte(remoteAddr.String() + "\n"))
+	//		break
+	//	}
+	//}
+
+	session.Close()
 
 	go func() {
 		defer listener.Close()
@@ -101,6 +139,14 @@ func tunnel() {
 	}
 
 	serverConn.Close()
+}
+
+func SendCommand(in io.WriteCloser, cmd string) error {
+	if _, err := in.Write([]byte(cmd + "\n")); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func handleClient2(client net.Conn, localEndpoint string) {

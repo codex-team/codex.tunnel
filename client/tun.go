@@ -1,13 +1,6 @@
 package main
 
 import (
-	"io"
-	"log"
-)
-
-package main
-
-import (
 "fmt"
 "golang.org/x/crypto/ssh"
 "io"
