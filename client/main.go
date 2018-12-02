@@ -98,7 +98,7 @@ func tunnel(ServerHost string, LocalHost string, LocalPort int, privateKeyFilena
 	go func() {
 		defer listener.Close()
 
-		log.Println(fmt.Sprintf("listening remote %s", remoteAddr))
+		log.Println(fmt.Sprintf("tunneling %s.tun.ifmo.su --> %s", ServerHost, localEndpoint.String()))
 
 		for {
 			client, err := listener.Accept()
