@@ -1,12 +1,12 @@
 package main
 
 import (
-"fmt"
-"golang.org/x/crypto/ssh"
-"io"
-"io/ioutil"
-"log"
-"net"
+	"fmt"
+	"github.com/function61/gokit/bidipipe"
+	"golang.org/x/crypto/ssh"
+	"io/ioutil"
+	"log"
+	"net"
 )
 
 type Endpoint struct {
@@ -18,36 +18,21 @@ func (endpoint *Endpoint) String() string {
 	return fmt.Sprintf("%s:%d", endpoint.Host, endpoint.Port)
 }
 
-type SSHtunnel struct {
-	Local  *Endpoint
-	Server *Endpoint
-
-	Config *ssh.ClientConfig
-}
-
-func handleClient(client net.Conn, remote net.Conn) {
+func handleClient(client net.Conn, localEndpoint string) {
 	defer client.Close()
-	chDone := make(chan bool)
 
-	// Start remote -> local data transfer
-	go func() {
-		_, err := io.Copy(client, remote)
-		if err != nil {
-			log.Println(fmt.Sprintf("error while copy remote->local: %s", err))
-		}
-		chDone <- true
-	}()
+	log.Println(fmt.Sprintf("%s connected", client.RemoteAddr()))
+	defer log.Println("closed")
 
-	// Start local -> remote data transfer
-	go func() {
-		_, err := io.Copy(remote, client)
-		if err != nil {
-			log.Println(fmt.Sprintf("error while copy local->remote: %s", err))
-		}
-		chDone <- true
-	}()
+	remote, err := net.Dial("tcp", localEndpoint)
+	if err != nil {
+		log.Println(fmt.Sprintf("dial INTO local service error: %s", err.Error()))
+		return
+	}
 
-	<-chDone
+	if err := bidipipe.Pipe(client, "client", remote, "remote"); err != nil {
+		log.Println(err.Error())
+	}
 }
 
 func privateKeyFile(file string) ssh.AuthMethod {
