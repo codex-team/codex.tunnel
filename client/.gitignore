@@ -1,5 +1,4 @@
 client
-client-macos
-client-linux
+client-*
 *.pem
 *.key
