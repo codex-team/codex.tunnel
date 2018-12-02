@@ -20,9 +20,6 @@ func main() {
 		//log.Fatalln(err)
 		os.Exit(0)
 	}
-
-	//generate("key")
-	//tunnel()
 }
 
 func generate(privkeyName string, pubkeyName string, sshkeyName string) {
@@ -42,10 +39,10 @@ func generate(privkeyName string, pubkeyName string, sshkeyName string) {
 	}
 }
 
-func tunnel() {
+func tunnel(ServerHost string, LocalHost string, LocalPort int, privateKeyFilename string) {
 	localEndpoint := &Endpoint{
-		Host: "localhost",
-		Port: 9000,
+		Host: LocalHost,
+		Port: LocalPort,
 	}
 
 	serverEndpoint := &Endpoint{
@@ -56,7 +53,7 @@ func tunnel() {
 	sshConfig := &ssh.ClientConfig{
 		User: "codex",
 		Auth: []ssh.AuthMethod{
-			privateKeyFile("../tun_key.pem"),
+			privateKeyFile(privateKeyFilename),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
@@ -73,7 +70,7 @@ func tunnel() {
 		log.Fatalln(fmt.Printf("Listen open port ON remote server error: %s", err))
 	}
 	remoteAddr := listener.Addr()
-	PORT := strings.Split(remoteAddr.String(), ":")[1]
+	ServerPort := strings.Split(remoteAddr.String(), ":")[1]
 
 	session, err := serverConn.NewSession()
 	if err != nil {
@@ -92,9 +89,9 @@ func tunnel() {
 		log.Fatalln(fmt.Sprintf("%s", stdoutBuf.String()))
 	}
 
-	session.Start("nostr")
-	in.Write([]byte("myhost\n"))
-	in.Write([]byte(PORT + "\n"))
+	session.Start("auth")
+	in.Write([]byte(ServerHost + "\n"))
+	in.Write([]byte(ServerPort + "\n"))
 
 	defer session.Close()
 

@@ -8,7 +8,8 @@ var opts struct {
 type TunnelCommand struct {
 	Host string `short:"H" long:"host" description:"Desired hostname" required:"true"`
 	Localhost string `short:"L" long:"localhost" description:"Desired local host" required:"false" default:"localhost"`
-	Port string `short:"p" long:"port" description:"Desired local port" required:"true"`
+	Port int `short:"p" long:"port" description:"Desired local port" required:"true"`
+	Key string `short:"k" long:"key" description:"Path to privkey file" required:"true"`
 }
 
 type GenerateCommand struct {
@@ -22,5 +23,10 @@ var TunnelCfg TunnelCommand
 
 func (x *GenerateCommand) Execute(args []string) error {
 	generate(x.Privkey, x.Pubkey, x.Sshkey)
+	return nil
+}
+
+func (x *TunnelCommand) Execute(args []string) error {
+	tunnel(x.Host, x.Localhost, x.Port, x.Key)
 	return nil
 }
