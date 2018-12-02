@@ -6,6 +6,6 @@
 int main()
 {
     setuid( 0 );
-    system( "/home/entry.sh" );
+    system( "/home/entry.py" );
     return 0;
  }
