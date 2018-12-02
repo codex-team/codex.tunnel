@@ -1,0 +1,8 @@
+version: '2'
+
+services:
+  tunnel:
+    build: .
+    ports:
+    - "8022:22"
+    - "8081:80"
