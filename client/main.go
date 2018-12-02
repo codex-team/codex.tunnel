@@ -39,8 +39,8 @@ func tunnel() {
 	}
 
 	serverEndpoint := &Endpoint{
-		Host: "localhost",
-		Port: 8022,
+		Host: "tun.ifmo.su",
+		Port: 17022,
 	}
 
 	sshConfig := &ssh.ClientConfig{
@@ -86,31 +86,6 @@ func tunnel() {
 	in.Write([]byte("myhost\n"))
 	in.Write([]byte(PORT + "\n"))
 
-	//var (
-	//	line string
-	//	r    = bufio.NewReader(out)
-	//	output []byte
-	//)
-	//for {
-	//	b, err := r.ReadByte()
-	//	if err != nil {
-	//		break
-	//	}
-	//	output = append(output, b)
-	//	if b == byte('\n') {
-	//		line = ""
-	//		continue
-	//	}
-	//	line += string(b)
-	//	log.Printf(line)
-	//	if line == "lol" {
-	//		log.Printf("send")
-	//		in.Write([]byte("myhost\n"))
-	//		in.Write([]byte(remoteAddr.String() + "\n"))
-	//		break
-	//	}
-	//}
-
 	defer session.Close()
 
 	go func() {
@@ -118,7 +93,6 @@ func tunnel() {
 
 		log.Println(fmt.Sprintf("listening remote %s", remoteAddr))
 
-		// handle incoming connections on reverse forwarded tunnel
 		for {
 			client, err := listener.Accept()
 			if err != nil {
