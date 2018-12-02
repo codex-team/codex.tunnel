@@ -1,14 +1,14 @@
 package main
 
 import (
-"crypto/rsa"
-"crypto/x509"
-"encoding/asn1"
-"encoding/pem"
-"fmt"
-"golang.org/x/crypto/ssh"
-"io/ioutil"
-"os"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/asn1"
+	"encoding/pem"
+	"fmt"
+	"golang.org/x/crypto/ssh"
+	"io/ioutil"
+	"os"
 )
 
 func savePEMKey(fileName string, key *rsa.PrivateKey) {

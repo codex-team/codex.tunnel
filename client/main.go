@@ -5,20 +5,27 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"github.com/jessevdk/go-flags"
 	"fmt"
-	"github.com/function61/gokit/bidipipe"
 	"golang.org/x/crypto/ssh"
 	"log"
-	"net"
+	"os"
 	"strings"
 )
 
 func main() {
+	_, err := flags.Parse(&opts)
+
+	if err != nil {
+		//log.Fatalln(err)
+		os.Exit(0)
+	}
+
 	//generate("key")
-	tunnel()
+	//tunnel()
 }
 
-func generate(name string) {
+func generate(privkeyName string, pubkeyName string, sshkeyName string) {
 	reader := rand.Reader
 	bitSize := 2048
 
@@ -27,9 +34,12 @@ func generate(name string) {
 
 	publicKey := key.PublicKey
 
-	savePublicPEMKey(fmt.Sprintf("%s.pub", name), publicKey)
-	saveSSHKey(fmt.Sprintf("%s.public.pem", name), &publicKey)
-	savePEMKey(fmt.Sprintf("%s.private.pem", name), key)
+	savePublicPEMKey(fmt.Sprintf("%s", pubkeyName), publicKey)
+	savePEMKey(fmt.Sprintf("%s", privkeyName), key)
+
+	if sshkeyName != "" {
+		saveSSHKey(fmt.Sprintf("%s", sshkeyName), &publicKey)
+	}
 }
 
 func tunnel() {
@@ -99,7 +109,7 @@ func tunnel() {
 				return
 			}
 
-			go handleClient2(client, localEndpoint.String())
+			go handleClient(client, localEndpoint.String())
 		}
 	}()
 
@@ -112,21 +122,4 @@ func tunnel() {
 	}
 
 	serverConn.Close()
-}
-
-func handleClient2(client net.Conn, localEndpoint string) {
-	defer client.Close()
-
-	log.Println(fmt.Sprintf("%s connected", client.RemoteAddr()))
-	defer log.Println("closed")
-
-	remote, err := net.Dial("tcp", localEndpoint)
-	if err != nil {
-		log.Println(fmt.Sprintf("dial INTO local service error: %s", err.Error()))
-		return
-	}
-
-	if err := bidipipe.Pipe(client, "client", remote, "remote"); err != nil {
-		log.Println(err.Error())
-	}
 }
