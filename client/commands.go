@@ -6,10 +6,12 @@ var opts struct {
 }
 
 type TunnelCommand struct {
-	Host string `short:"H" long:"host" description:"Desired hostname" required:"true"`
-	Localhost string `short:"L" long:"localhost" description:"Desired local host" required:"false" default:"localhost"`
-	Port int `short:"p" long:"port" description:"Desired local port" required:"true"`
+	Host string `short:"H" long:"hostname" description:"Desired hostname" required:"true"`
+	LocalHost string `short:"L" long:"local_host" description:"Desired local host" required:"false" default:"localhost"`
+	LocalPort int `short:"P" long:"local_port" description:"Desired local port" required:"true"`
 	Key string `short:"k" long:"key" description:"Path to privkey file" required:"true"`
+	ServerIp string `short:"h" long:"server_host" description:"Server hostname" required:"false" default:"tun.ifmo.su"`
+	ServerPort int `short:"p" long:"server_port" description:"Server port" required:"false" default:"22"`
 }
 
 type GenerateCommand struct {
@@ -27,6 +29,6 @@ func (x *GenerateCommand) Execute(args []string) error {
 }
 
 func (x *TunnelCommand) Execute(args []string) error {
-	tunnel(x.Host, x.Localhost, x.Port, x.Key)
+	tunnel(x.Host, x.LocalHost, x.LocalPort, x.Key, x.ServerPort, x.ServerIp)
 	return nil
 }

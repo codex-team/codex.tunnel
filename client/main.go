@@ -39,15 +39,15 @@ func generate(privkeyName string, pubkeyName string, sshkeyName string) {
 	}
 }
 
-func tunnel(ServerHost string, LocalHost string, LocalPort int, privateKeyFilename string) {
+func tunnel(ServerHost string, LocalHost string, LocalPort int, privateKeyFilename string, SshPort int, ServerIp string) {
 	localEndpoint := &Endpoint{
 		Host: LocalHost,
 		Port: LocalPort,
 	}
 
 	serverEndpoint := &Endpoint{
-		Host: "tun.ifmo.su",
-		Port: 17022,
+		Host: ServerIp,
+		Port: SshPort,
 	}
 
 	sshConfig := &ssh.ClientConfig{
@@ -98,7 +98,7 @@ func tunnel(ServerHost string, LocalHost string, LocalPort int, privateKeyFilena
 	go func() {
 		defer listener.Close()
 
-		log.Println(fmt.Sprintf("tunneling %s.tun.ifmo.su --> %s", ServerHost, localEndpoint.String()))
+		log.Println(fmt.Sprintf("tunneling %s.%s --> %s", ServerHost, serverEndpoint.Host, localEndpoint.String()))
 
 		for {
 			client, err := listener.Accept()
