@@ -32,6 +32,10 @@ func (x *RunCommand) Execute(args []string) error {
 	var err error
 	var config Configuration
 
+	if _, err := os.Stat("keys"); os.IsNotExist(err) {
+		os.Mkdir("keys", 0777)
+	}
+
 	err, config = loadConfig()
 	if err != nil {
 		fmt.Print("Input server address (ex: https://tun.ifmo.su or http://localhost:8081): ")
