@@ -16,15 +16,25 @@ RUN rm /home/codex/entry.cpp
 RUN chmod 4755 /home/codex/entry
 RUN apt-get remove -y g++ --purge
 RUN apt-get -y autoremove
+RUN chmod 777 /home/codex/.ssh/authorized_keys
 
 COPY entry.py /home/entry.py
+#COPY default.conf /etc/nginx/sites-available/default
 RUN chmod +x /home/entry.py
 
-RUN rm /etc/nginx/sites-enabled/default
-RUN service nginx restart
+RUN apt-get install -y python3-pip
+RUN pip3 install flask
+COPY config /home/config
+COPY server.py /home/server.py
 
 RUN sed -i 's/#MaxSessions 10/MaxSessions 1000/' /etc/ssh/sshd_config
+RUN sed -i 's/#StrictModes yes/StrictModes no/' /etc/ssh/sshd_config
+
+COPY default.conf /etc/nginx/sites-available/default
 
 EXPOSE 22
 
-CMD ["/usr/sbin/sshd", "-D"]
+COPY start.sh /root/start.sh
+RUN chmod +x /root/start.sh
+WORKDIR /root
+CMD ["./start.sh", "-D"]
