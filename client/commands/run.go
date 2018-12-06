@@ -156,6 +156,7 @@ func generateKeySet(name string) (string, string, error) {
 func checkAndClear(name string, err error)  {
 	if err != nil {
 		clear(name)
+		checkError(err)
 	}
 }
 

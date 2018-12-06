@@ -35,9 +35,12 @@ func make_tunnel(Host string, LocalHost string, LocalPort int, ServerHost string
 		return err
 	}
 
-	ServerHostOnly, _, err := net.SplitHostPort(u.Host)
-	if err != nil {
-		return err
+	ServerHostOnly := u.Host
+	if u.Port() != "" {
+		ServerHostOnly, _, err = net.SplitHostPort(u.Host)
+		if err != nil {
+			return err
+		}
 	}
 
 	serverEndpoint := &Endpoint{
