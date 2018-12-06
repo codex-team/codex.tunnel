@@ -1,22 +1,9 @@
-package main
+package commands
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 )
-
-var opts struct {
-	Run RunCommand `command:"run" description:"Run tunel"`
-	Generate GenerateCommand `command:"generate" description:"Generate rsa keys"`
-	Tunnel TunnelCommand `command:"tunnel" description:"Start tunnel"`
-}
-
-var Configuration struct {
-	ServerAddr string
-	ServerPort int
-	Password string
-}
 
 type TunnelCommand struct {
 	Host string `short:"H" long:"hostname" description:"Desired hostname" required:"true"`
@@ -38,35 +25,9 @@ type RunCommand struct {
 	Port string `short:"P" long:"port" description:"Local tunnel port" required:"true"`
 }
 
-func (x *GenerateCommand) Execute(args []string) error {
-	generate(x.Privkey, x.Pubkey, x.Sshkey)
-	return nil
-}
-
-func (x *TunnelCommand) Execute(args []string) error {
-	tunnel(x.Host, x.LocalHost, x.LocalPort, x.Key, x.ServerPort, x.ServerIp)
-	return nil
-}
-
-func (x *RunCommand) Execute(args []string) error {
-	var err error
-
-	fmt.Print("Input server address: ")
-	_, err = fmt.Scanf("%s\n", &Configuration.ServerAddr)
-	checkError(err)
-
-
-	fmt.Print("Input server port: ")
-	_, err = fmt.Scanf("%d\n", &Configuration.ServerPort)
-	checkError(err)
-
-	fmt.Print("Input access password: ")
-	_, err = fmt.Scanf("%s\n", &Configuration.Password)
-	checkError(err)
-
-	configJSON, _ := json.Marshal(Configuration)
-	err = ioutil.WriteFile("config.json", configJSON, 0644)
-	checkError(err)
-
-	return nil
+func checkError(err error) {
+	if err != nil {
+		fmt.Println("Fatal error ", err.Error())
+		os.Exit(1)
+	}
 }

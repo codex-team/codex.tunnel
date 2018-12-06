@@ -1,6 +1,7 @@
-package main
+package commands
 
 import (
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/asn1"
@@ -10,6 +11,25 @@ import (
 	"io/ioutil"
 	"os"
 )
+
+func (x *GenerateCommand) Execute(args []string) error {
+	reader := rand.Reader
+	bitSize := 2048
+
+	key, err := rsa.GenerateKey(reader, bitSize)
+	checkError(err)
+
+	publicKey := key.PublicKey
+
+	savePublicPEMKey(fmt.Sprintf("%s", x.Pubkey), publicKey)
+	savePEMKey(fmt.Sprintf("%s", x.Privkey), key)
+
+	if x.Sshkey != "" {
+		saveSSHKey(fmt.Sprintf("%s", x.Sshkey), &publicKey)
+	}
+
+	return nil
+}
 
 func savePEMKey(fileName string, key *rsa.PrivateKey) {
 	outFile, err := os.Create(fileName)
@@ -50,9 +70,3 @@ func saveSSHKey(fileName string, key *rsa.PublicKey) {
 	checkError(err)
 }
 
-func checkError(err error) {
-	if err != nil {
-		fmt.Println("Fatal error ", err.Error())
-		os.Exit(1)
-	}
-}
