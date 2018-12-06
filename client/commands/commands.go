@@ -22,7 +22,8 @@ type GenerateCommand struct {
 
 type RunCommand struct {
 	Host string `short:"H" long:"host" description:"Desired host" required:"false"`
-	Port string `short:"P" long:"port" description:"Local tunnel port" required:"true"`
+	Port int `short:"P" long:"port" description:"Local tunnel port" required:"true"`
+	LocalHost string `short:"L" long:"local_host" description:"Desired local host" required:"false" default:"localhost"`
 }
 
 func checkError(err error) {

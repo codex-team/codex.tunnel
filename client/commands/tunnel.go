@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"net/url"
 	"strings"
 )
 
@@ -17,25 +18,37 @@ type Endpoint struct {
 	Port int
 }
 
+const DefaultUser = "codex"
+
 func (endpoint *Endpoint) String() string {
 	return fmt.Sprintf("%s:%d", endpoint.Host, endpoint.Port)
 }
 
-func (x *TunnelCommand) Execute(args []string) error {
+func make_tunnel(Host string, LocalHost string, LocalPort int, ServerHost string, ServerOutPort int, Key string) error {
 	localEndpoint := &Endpoint{
-		Host: x.LocalHost,
-		Port: x.LocalPort,
+		Host: LocalHost,
+		Port: LocalPort,
+	}
+
+	u, err := url.Parse(ServerHost)
+	if err != nil {
+		return err
+	}
+
+	ServerHostOnly, _, err := net.SplitHostPort(u.Host)
+	if err != nil {
+		return err
 	}
 
 	serverEndpoint := &Endpoint{
-		Host: x.ServerIp,
-		Port: x.ServerPort,
+		Host: ServerHostOnly,
+		Port: ServerOutPort,
 	}
 
 	sshConfig := &ssh.ClientConfig{
-		User: "codex",
+		User: DefaultUser,
 		Auth: []ssh.AuthMethod{
-			privateKeyFile(x.Key),
+			privateKeyFile(Key),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
@@ -74,7 +87,7 @@ func (x *TunnelCommand) Execute(args []string) error {
 	}
 
 	session.Start("auth")
-	in.Write([]byte(x.Host + "\n"))
+	in.Write([]byte(Host + "\n"))
 	in.Write([]byte(ServerPort + "\n"))
 
 	defer session.Close()
@@ -82,7 +95,7 @@ func (x *TunnelCommand) Execute(args []string) error {
 	go func() {
 		defer listener.Close()
 
-		log.Println(fmt.Sprintf("tunneling %s.%s --> %s", x.Host, serverEndpoint.Host, localEndpoint.String()))
+		log.Println(fmt.Sprintf("tunneling %s.%s --> %s", Host, ServerHostOnly, localEndpoint.String()))
 
 		for {
 			client, err := listener.Accept()
@@ -103,6 +116,10 @@ func (x *TunnelCommand) Execute(args []string) error {
 	}
 
 	return nil
+}
+
+func (x *TunnelCommand) Execute(args []string) error {
+	return make_tunnel(x.Host, x.LocalHost, x.LocalPort, x.ServerIp, x.ServerPort, x.Key)
 }
 
 func handleClient(client net.Conn, localEndpoint string) {

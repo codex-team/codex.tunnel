@@ -12,28 +12,47 @@ import (
 	"os"
 )
 
+const letterBytes = "abcdefghijklmnopqrstuvwxyz"
+
 func (x *GenerateCommand) Execute(args []string) error {
+	return generateKeys(x.Privkey, x.Pubkey, x.Sshkey)
+}
+
+func generateKeys(Privkey string, Pubkey string, Sshkey string) error {
 	reader := rand.Reader
 	bitSize := 2048
 
 	key, err := rsa.GenerateKey(reader, bitSize)
-	checkError(err)
+	if err != nil {
+		return err
+	}
 
 	publicKey := key.PublicKey
 
-	savePublicPEMKey(fmt.Sprintf("%s", x.Pubkey), publicKey)
-	savePEMKey(fmt.Sprintf("%s", x.Privkey), key)
+	err = savePublicPEMKey(fmt.Sprintf("%s", Pubkey), publicKey)
+	if err != nil {
+		return err
+	}
+	err = savePEMKey(fmt.Sprintf("%s", Privkey), key)
+	if err != nil {
+		return err
+	}
 
-	if x.Sshkey != "" {
-		saveSSHKey(fmt.Sprintf("%s", x.Sshkey), &publicKey)
+	if Sshkey != "" {
+		err = saveSSHKey(fmt.Sprintf("%s", Sshkey), &publicKey)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func savePEMKey(fileName string, key *rsa.PrivateKey) {
+func savePEMKey(fileName string, key *rsa.PrivateKey) error {
 	outFile, err := os.Create(fileName)
-	checkError(err)
+	if err != nil {
+		return err
+	}
 	defer outFile.Close()
 
 	var privateKey = &pem.Block{
@@ -41,13 +60,14 @@ func savePEMKey(fileName string, key *rsa.PrivateKey) {
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
 	}
 
-	err = pem.Encode(outFile, privateKey)
-	checkError(err)
+	return pem.Encode(outFile, privateKey)
 }
 
-func savePublicPEMKey(fileName string, pubkey rsa.PublicKey) {
+func savePublicPEMKey(fileName string, pubkey rsa.PublicKey) error {
 	asn1Bytes, err := asn1.Marshal(pubkey)
-	checkError(err)
+	if err != nil {
+		return err
+	}
 
 	var pemkey = &pem.Block{
 		Type:  "PUBLIC KEY",
@@ -55,18 +75,43 @@ func savePublicPEMKey(fileName string, pubkey rsa.PublicKey) {
 	}
 
 	pemfile, err := os.Create(fileName)
-	checkError(err)
+	if err != nil {
+		return err
+	}
+
 	defer pemfile.Close()
 
-	err = pem.Encode(pemfile, pemkey)
-	checkError(err)
+	return pem.Encode(pemfile, pemkey)
 }
 
-func saveSSHKey(fileName string, key *rsa.PublicKey) {
+func saveSSHKey(fileName string, key *rsa.PublicKey) error {
 	publicRsaKey, err := ssh.NewPublicKey(key)
-	checkError(err)
+	if err != nil {
+		return err
+	}
+
 	pubKeyBytes := ssh.MarshalAuthorizedKey(publicRsaKey)
-	err = ioutil.WriteFile(fileName, pubKeyBytes, 0600)
-	checkError(err)
+	return ioutil.WriteFile(fileName, pubKeyBytes, 0600)
 }
 
+func RandASCIIBytes(n int) []byte {
+	output := make([]byte, n)
+	// We will take n bytes, one byte for each character of output.
+	randomness := make([]byte, n)
+	// read all random
+	_, err := rand.Read(randomness)
+	if err != nil {
+		panic(err)
+	}
+	l := len(letterBytes)
+	// fill output
+	for pos := range output {
+		// get random item
+		random := uint8(randomness[pos])
+		// random % 64
+		randomPos := random % uint8(l)
+		// put into output
+		output[pos] = letterBytes[randomPos]
+	}
+	return output
+}
