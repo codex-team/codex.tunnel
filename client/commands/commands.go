@@ -1,9 +1,9 @@
-package main
+package commands
 
-var opts struct {
-	Generate GenerateCommand `command:"generate" description:"Generate rsa keys"`
-	Tunnel TunnelCommand `command:"tunnel" description:"Start tunnel"`
-}
+import (
+	"fmt"
+	"os"
+)
 
 type TunnelCommand struct {
 	Host string `short:"H" long:"hostname" description:"Desired hostname" required:"true"`
@@ -20,15 +20,15 @@ type GenerateCommand struct {
 	Sshkey string `long:"ssh" description:"Path to save pubkey in SSH format if you want" required:"false"`
 }
 
-var GenerateCfg GenerateCommand
-var TunnelCfg TunnelCommand
-
-func (x *GenerateCommand) Execute(args []string) error {
-	generate(x.Privkey, x.Pubkey, x.Sshkey)
-	return nil
+type RunCommand struct {
+	Host string `short:"H" long:"host" description:"Desired host" required:"false"`
+	Port int `short:"P" long:"port" description:"Local tunnel port" required:"true"`
+	LocalHost string `short:"L" long:"local_host" description:"Desired local host" required:"false" default:"localhost"`
 }
 
-func (x *TunnelCommand) Execute(args []string) error {
-	tunnel(x.Host, x.LocalHost, x.LocalPort, x.Key, x.ServerPort, x.ServerIp)
-	return nil
+func checkError(err error) {
+	if err != nil {
+		fmt.Println("Fatal error ", err.Error())
+		os.Exit(1)
+	}
 }
