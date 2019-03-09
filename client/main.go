@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./commands"
+	"codex.tunnel/commands"
 	"github.com/jessevdk/go-flags"
 	"os"
 )
