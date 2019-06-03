@@ -37,7 +37,7 @@ if not re.match(r'^[A-Za-z][A-Za-z0-9]*$', host):
     print("Host should be alphanumeric and start with a letter")
     exit(0)
 
-host = host + ".tun.ifmo.su"
+host = host + ".tun.codex.so"
 
 with open("/etc/nginx/sites-enabled/{}.conf".format(host), "w") as w:
     w.write(config.format(host, port))
